@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" fill="none">
+  <defs>
+    <linearGradient id="skyBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#80B8FF"/>
+      <stop offset="1" stop-color="#D9EEFF"/>
+    </linearGradient>
+    <linearGradient id="seaBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#75B9D8"/>
+      <stop offset="1" stop-color="#4A8BAA"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#skyBlue)"/>
+  <rect y="242" width="640" height="118" fill="url(#seaBlue)"/>
+  <rect x="312" y="90" width="10" height="118" rx="4" fill="#EAF0F5"/>
+  <rect x="298" y="118" width="40" height="30" rx="6" fill="#FAFCFF"/>
+  <rect x="130" y="190" width="330" height="36" rx="18" fill="#1C4D73"/>
+  <path d="M102 226H486L462 260H150L102 226Z" fill="#BA403A"/>
+  <rect x="170" y="156" width="34" height="24" fill="#E2874E"/>
+  <rect x="208" y="156" width="34" height="24" fill="#2A75C7"/>
+  <rect x="246" y="156" width="34" height="24" fill="#D9483F"/>
+  <rect x="284" y="156" width="34" height="24" fill="#E0B44D"/>
+  <rect x="322" y="156" width="34" height="24" fill="#2F9A78"/>
+  <rect x="360" y="156" width="34" height="24" fill="#E2874E"/>
+  <rect x="398" y="156" width="34" height="24" fill="#2A75C7"/>
+  <rect x="190" y="128" width="34" height="24" fill="#D9483F"/>
+  <rect x="228" y="128" width="34" height="24" fill="#2A75C7"/>
+  <rect x="266" y="128" width="34" height="24" fill="#2F9A78"/>
+  <rect x="304" y="128" width="34" height="24" fill="#E0B44D"/>
+  <rect x="342" y="128" width="34" height="24" fill="#D9483F"/>
+  <rect x="380" y="128" width="34" height="24" fill="#2A75C7"/>
+  <path d="M0 248C63 239 101 241 154 248C213 256 250 257 318 248C392 239 430 242 502 248C548 252 591 252 640 248V360H0V248Z" fill="#78B9D6" opacity=".4"/>
+</svg>

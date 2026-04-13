@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shield Log Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link id="leaflet-css" rel="stylesheet" href="./assets/vendor/leaflet/leaflet.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="./assets/placeholder-logo.svg" alt="Logo placeholder" class="brand-logo" />
+          <p class="replace-hint">后续替换为正式 logo 即可</p>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="主导航">
+          <a class="nav-item" href="#overview"><span class="nav-icon icon-grid"></span><span>风险总览</span></a>
+          <a class="nav-item is-active" href="#index-panel"><span class="nav-icon icon-alert"></span><span>今日风险指数</span></a>
+          <a class="nav-item" href="#trend-panel"><span class="nav-icon icon-chart"></span><span>风险趋势变化</span></a>
+          <a class="nav-item" href="#analysis-panel"><span class="nav-icon icon-ship"></span><span>风险构成分析</span></a>
+          <a class="nav-item" href="#events-panel"><span class="nav-icon icon-signal"></span><span>行业事件雷达</span></a>
+          <a class="nav-item" href="#suggestion-panel"><span class="nav-icon icon-doc"></span><span>决策建议与处置方案</span></a>
+          <a class="nav-item" href="#source-panel"><span class="nav-icon icon-data"></span><span>数据来源与调用</span></a>
+          <a class="nav-item" href="#monitor-panel"><span class="nav-icon icon-monitor"></span><span>行业资讯与事件监测</span></a>
+          <a class="nav-item" href="#system-panel"><span class="nav-icon icon-gear"></span><span>系统管理</span></a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="topbar-spacer"></div>
+          <div class="top-actions">
+            <span class="top-action">语言选择</span>
+            <span class="top-action">深色模式</span>
+            <span class="status-dot" aria-hidden="true"></span>
+          </div>
+        </header>
+
+        <section class="hero-grid" id="overview">
+          <article class="card score-card" id="index-panel">
+            <div class="card-title-row"><span class="section-icon icon-outline-alert"></span><h2>今日风险指数</h2></div>
+            <div class="score-value">53</div>
+            <p class="score-label">按昨日上升 15</p>
+          </article>
+
+          <article class="card chart-card" id="trend-panel">
+            <div class="card-title-row"><span class="section-icon icon-outline-chart"></span><h2>风险指数变化</h2></div>
+            <div class="chart-shell chart-shell-large" data-chart="hero"></div>
+          </article>
+        </section>
+
+        <section class="metric-grid metric-grid-four" aria-label="风险指标卡片">
+          <article class="card metric-card metric-warn">
+            <div class="card-title-row"><span class="section-icon icon-outline-building"></span><h2>通关与监管</h2></div>
+            <div class="metric-number">61</div>
+            <p class="metric-level">中等风险</p>
+            <p class="metric-trend is-up">较昨日上升 5</p>
+          </article>
+          <article class="card metric-card metric-safe">
+            <div class="card-title-row"><span class="section-icon icon-outline-stack"></span><h2>上游货源与装港</h2></div>
+            <div class="metric-number">11</div>
+            <p class="metric-level">无风险</p>
+            <p class="metric-trend is-down">较昨日下降 45</p>
+          </article>
+          <article class="card metric-card metric-low">
+            <div class="card-title-row"><span class="section-icon icon-outline-bars"></span><h2>市场需求</h2></div>
+            <div class="metric-number">25</div>
+            <p class="metric-level">低等风险</p>
+            <p class="metric-trend is-down">较昨日下降 26</p>
+          </article>
+          <article class="card metric-card metric-high">
+            <div class="card-title-row"><span class="section-icon icon-outline-route"></span><h2>航路通行</h2></div>
+            <div class="metric-number">98</div>
+            <p class="metric-level">高等风险</p>
+            <p class="metric-trend is-up">较昨日上升 35</p>
+          </article>
+        </section>
+
+        <section class="metric-grid metric-grid-three" id="analysis-panel">
+          <article class="card metric-card metric-warn">
+            <div class="card-title-row"><span class="section-icon icon-outline-cloud"></span><h2>气象海况</h2></div>
+            <div class="metric-number">69</div>
+            <p class="metric-level">中等风险</p>
+            <p class="metric-trend is-up">较昨日上升 5</p>
+          </article>
+          <article class="card metric-card metric-low">
+            <div class="card-title-row"><span class="section-icon icon-outline-face"></span><h2>市场情绪</h2></div>
+            <div class="metric-number">28</div>
+            <p class="metric-level">低等风险</p>
+            <p class="metric-trend is-down">较昨日下降 45</p>
+          </article>
+          <article class="card metric-card metric-safe">
+            <div class="card-title-row"><span class="section-icon icon-outline-wheel"></span><h2>运价指数</h2></div>
+            <div class="metric-number">8</div>
+            <p class="metric-level">无风险</p>
+            <p class="metric-trend is-down">较昨日下降 45</p>
+          </article>
+        </section>
+
+        <section class="card recommendation-card" id="suggestion-panel">
+          <div class="card-header-split">
+            <div class="card-title-row"><span class="section-icon icon-outline-guide"></span><h2>风控处置指引</h2></div>
+            <button class="action-button" type="button">查看详情</button>
+          </div>
+          <p class="warning-line">检测结果：苏伊士运河航段 AIS 拥堵指数较昨日上升 +32%，目的港（鹿特丹）平均靠泊等待时长增加至 9.6 小时。</p>
+          <p class="warning-line">影响评估：若维持原航线 “CNSHA → SGSIN → SUZ → NLRTM”，预计到港时间将延迟 6-12 小时，可能影响后续班期衔接。</p>
+          <div class="recommendation-list">
+            <p>1) 优先使用备选航线 “CNSHA → SGSIN → Good Hope → NLRTM”，避开拥堵海域；</p>
+            <p>2) 即时向鹿特丹港代理确认最新靠泊窗口，动态调整靠泊序；</p>
+            <p>3) 若预计延迟超过 6 小时，启动班期级联调整；</p>
+            <p>4) 后续航次控制即期货盘投入比例 ≤ 35%，保持运力灵活。</p>
+          </div>
+        </section>
+
+        <section class="info-grid" id="events-panel">
+          <article class="card info-card">
+            <div class="card-title-row"><span class="section-icon icon-outline-eye"></span><h2>监测情况</h2></div>
+            <p>当前红海一苏伊士上游区域航道仍处于中断。AIS 航迹密度较上周上升 18%，荷塘曲线从结构性离散向阶段性堆积。</p>
+            <p>同期海况出现短时扰动，风力 6-7 级、浪高 2.8-4.3m，部分船舶航速下降 0.9-1.7 kn。</p>
+            <div class="card-title-row subsection-title"><span class="section-icon icon-outline-alert"></span><h3>风险影响</h3></div>
+            <p>航路通行效率受限，预计本航段产生 4-10 小时航次偏移；对后续班期衔接形成延迟压力，气象系统扰动将使航速恢复和靠港序调整成为关键影响因素。</p>
+          </article>
+
+          <article class="card info-card">
+            <div class="card-title-row"><span class="section-icon icon-outline-judge"></span><h2>拥堵类型判断</h2></div>
+            <p>当前拥堵属于短周期堆积、非结构性阻塞。拥堵表观将取决于：</p>
+            <ol class="ordered-points">
+              <li>风力回落至 &lt;5 级、浪高 &lt;2.5m；预计 8-18 小时</li>
+              <li>目的港窗口释放与跨区通行流量分散；预计 18-36 小时</li>
+            </ol>
+          </article>
+        </section>
+
+        <section class="card disposal-card" id="monitor-panel">
+          <div class="card-title-row"><span class="section-icon icon-outline-box"></span><h2>处置指引（依据 AIS 拥堵指数执行）</h2></div>
+          <div class="disposal-grid">
+            <article class="disposal-box disposal-safe">
+              <div class="disposal-head"><strong>I级（≤1.20）</strong><span class="dot-safe"></span></div>
+              <p>维持原航运执行</p>
+              <p>提前确认港口窗口，避免阶段性后移</p>
+            </article>
+            <article class="disposal-box disposal-warn">
+              <div class="disposal-head"><strong>II级（1.20-1.35）</strong><span class="dot-warn"></span></div>
+              <p>维持原航运执行</p>
+              <p>提前确认港口窗口，避免阶段性后移</p>
+            </article>
+            <article class="disposal-box disposal-high">
+              <div class="disposal-head"><strong>III级（≥1.35 或航道持续堵塞 ≥12h）</strong><span class="dot-high"></span></div>
+              <p>维持原航运执行</p>
+              <p>提前确认港口窗口，避免阶段性后移</p>
+            </article>
+          </div>
+          <div class="notice-box">
+            <div class="card-title-row"><span class="section-icon icon-outline-bell"></span><h2>提示</h2></div>
+            <p>当前为中等偏上通行风险区间，建议在未来 6 小时重点跟踪 AIS 密度、风力等级及目的港窗口变化情况。如触发阈值条件，系统将自动推送航线调整指引。</p>
+          </div>
+        </section>
+
+        <section class="card media-card" id="source-panel">
+          <div class="card-title-row"><span class="section-icon icon-outline-map"></span><h2>相关航运信息</h2></div>
+
+          <div class="media-layout">
+            <figure class="map-placeholder">
+              <img src="./assets/placeholder-map.svg" alt="地图占位图" />
+            </figure>
+
+            <div class="photo-grid">
+              <img src="./assets/placeholder-image.svg" alt="图片占位图 1" />
+              <img src="./assets/placeholder-image.svg" alt="图片占位图 2" />
+              <img src="./assets/placeholder-image.svg" alt="图片占位图 3" />
+              <img src="./assets/placeholder-image.svg" alt="图片占位图 4" />
+              <img src="./assets/placeholder-image.svg" alt="图片占位图 5" />
+              <img src="./assets/placeholder-image.svg" alt="图片占位图 6" />
+            </div>
+          </div>
+
+          <div class="mini-chart-grid">
+            <article class="mini-chart-card">
+              <h3>中国航运景气指数与信心指数</h3>
+              <div class="chart-shell" data-chart="china-shipping"></div>
+            </article>
+            <article class="mini-chart-card">
+              <h3>全球航运景气指数与信心指数</h3>
+              <div class="chart-shell" data-chart="global-shipping"></div>
+            </article>
+            <article class="mini-chart-card">
+              <h3>中国船舶运输企业景气指数与信心指数</h3>
+              <div class="chart-shell" data-chart="enterprise"></div>
+            </article>
+            <article class="mini-chart-card">
+              <h3>中国港口运输企业景气指数与信心指数</h3>
+              <div class="chart-shell" data-chart="port"></div>
+            </article>
+          </div>
+        </section>
+
+        <div id="system-panel" class="hidden-anchor" aria-hidden="true"></div>
+      </main>
+    </div>
+    <script id="leaflet-js" src="./assets/vendor/leaflet/leaflet.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>

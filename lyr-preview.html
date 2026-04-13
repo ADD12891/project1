@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星图 LYR 预览</title>
+    <link rel="stylesheet" href="./assets/vendor/leaflet/leaflet.css" />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #eef3f8;
+        --panel: rgba(255, 255, 255, 0.92);
+        --line: #d8e2ec;
+        --text: #203447;
+        --muted: #688097;
+        --accent: #1c7ed6;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(28, 126, 214, 0.14), transparent 26%),
+          linear-gradient(180deg, #f7fbff 0%, var(--bg) 100%);
+      }
+
+      .page {
+        width: min(1500px, calc(100vw - 24px));
+        margin: 20px auto;
+        display: grid;
+        gap: 16px;
+      }
+
+      .toolbar,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: 0 18px 40px rgba(24, 47, 74, 0.08);
+      }
+
+      .toolbar {
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .title-wrap h1 {
+        margin: 0;
+        font-size: 28px;
+      }
+
+      .title-wrap p {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .preset-btn {
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .preset-btn:hover {
+        border-color: #b8cadb;
+        background: #f7fbff;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .panel {
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .panel-head h2 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(28, 126, 214, 0.1);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .map {
+        height: min(72vh, 760px);
+        min-height: 520px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+      }
+
+      .meta {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .leaflet-container {
+        width: 100%;
+        height: 100%;
+        background: #dbe7f1;
+        font: inherit;
+      }
+
+      .leaflet-control-attribution {
+        font-size: 11px;
+      }
+
+      @media (max-width: 980px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .map {
+          min-height: 420px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="toolbar">
+        <div class="title-wrap">
+          <h1>星图 LYR 本地预览</h1>
+          <p>左边是“星图影像.lyr”，右边是“星图街道.lyr”。两个视图会保持同一中心点和缩放级别。</p>
+        </div>
+        <div class="actions">
+          <button class="preset-btn" type="button" data-loc="shanghai">上海港</button>
+          <button class="preset-btn" type="button" data-loc="kingston">Kingston</button>
+          <button class="preset-btn" type="button" data-loc="rotterdam">Rotterdam</button>
+          <button class="preset-btn" type="button" data-loc="singapore">Singapore</button>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>星图影像</h2>
+            <span class="badge">Imagery</span>
+          </div>
+          <div class="map" id="imagery-map"></div>
+          <div class="meta">
+            <span>来源文件：`星图影像.lyr`</span>
+            <span id="imagery-status">状态：等待瓦片加载</span>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>星图街道</h2>
+            <span class="badge">Street</span>
+          </div>
+          <div class="map" id="street-map"></div>
+          <div class="meta">
+            <span>来源文件：`星图街道.lyr`</span>
+            <span id="street-status">状态：等待瓦片加载</span>
+          </div>
+        </article>
+      </section>
+    </div>
+
+    <script src="./assets/vendor/leaflet/leaflet.js"></script>
+    <script>
+      const sources = {
+        imagery: "https://tiles0.geovisearth.com/base/v1/img/{z}/{x}/{y}?format=jpeg&token=26ee8d8d392b1cc49d91cd81ef1c802b6a63651541ac9c3d3d1359d8bf844228",
+        street: "https://tiles0.geovisearth.com/base/v1/vec/{z}/{x}/{y}?format=webp&token=26ee8d8d392b1cc49d91cd81ef1c802b6a63651541ac9c3d3d1359d8bf844228"
+      };
+
+      const presets = {
+        shanghai: [31.2304, 121.4737, 11],
+        kingston: [17.978416, -76.826775, 13],
+        rotterdam: [51.9244, 4.4777, 12],
+        singapore: [1.2644, 103.8406, 12]
+      };
+
+      const imageryStatus = document.getElementById("imagery-status");
+      const streetStatus = document.getElementById("street-status");
+
+      const imageryMap = L.map("imagery-map", { zoomControl: true }).setView(presets.shanghai.slice(0, 2), presets.shanghai[2]);
+      const streetMap = L.map("street-map", { zoomControl: true }).setView(presets.shanghai.slice(0, 2), presets.shanghai[2]);
+
+      const imageryLayer = L.tileLayer(sources.imagery, {
+        maxZoom: 18,
+        attribution: "Tiles &copy; GeoVisEarth"
+      }).addTo(imageryMap);
+
+      const streetLayer = L.tileLayer(sources.street, {
+        maxZoom: 18,
+        attribution: "Tiles &copy; GeoVisEarth"
+      }).addTo(streetMap);
+
+      const sync = (sourceMap, targetMap) => {
+        sourceMap.on("move", () => {
+          const center = sourceMap.getCenter();
+          const zoom = sourceMap.getZoom();
+          if (targetMap._syncing) return;
+          targetMap._syncing = true;
+          targetMap.setView(center, zoom, { animate: false });
+          targetMap._syncing = false;
+        });
+      };
+
+      sync(imageryMap, streetMap);
+      sync(streetMap, imageryMap);
+
+      imageryLayer.on("load", () => {
+        imageryStatus.textContent = "状态：影像瓦片加载成功";
+      });
+      imageryLayer.on("tileerror", () => {
+        imageryStatus.textContent = "状态：影像瓦片加载失败，当前网络可能无法访问 tiles0.geovisearth.com";
+      });
+
+      streetLayer.on("load", () => {
+        streetStatus.textContent = "状态：街道瓦片加载成功";
+      });
+      streetLayer.on("tileerror", () => {
+        streetStatus.textContent = "状态：街道瓦片加载失败，当前网络可能无法访问 tiles0.geovisearth.com";
+      });
+
+      document.querySelectorAll("[data-loc]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const [lat, lng, zoom] = presets[button.dataset.loc];
+          imageryMap.setView([lat, lng], zoom, { animate: false });
+          streetMap.setView([lat, lng], zoom, { animate: false });
+        });
+      });
+    </script>
+  </body>
+</html>

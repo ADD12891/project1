@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" fill="none">
+  <defs>
+    <linearGradient id="skyBulk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9DCCE8"/>
+      <stop offset="1" stop-color="#E3F3FB"/>
+    </linearGradient>
+    <linearGradient id="seaBulk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#88BBC7"/>
+      <stop offset="1" stop-color="#628894"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#skyBulk)"/>
+  <rect y="230" width="640" height="130" fill="url(#seaBulk)"/>
+  <path d="M192 210H454L432 260H176L192 210Z" fill="#D85F44"/>
+  <rect x="282" y="152" width="78" height="58" rx="6" fill="#F5F7FA"/>
+  <rect x="310" y="116" width="10" height="96" rx="5" fill="#F0F5FA"/>
+  <rect x="234" y="120" width="10" height="104" rx="5" fill="#C9A23E"/>
+  <rect x="392" y="118" width="10" height="106" rx="5" fill="#C9A23E"/>
+  <path d="M239 132L203 201" stroke="#D1A846" stroke-width="6" stroke-linecap="round"/>
+  <path d="M397 132L431 201" stroke="#D1A846" stroke-width="6" stroke-linecap="round"/>
+  <path d="M314 126L314 201" stroke="#C4CCD6" stroke-width="6" stroke-linecap="round"/>
+  <path d="M0 238C73 230 117 231 176 238C231 246 286 247 349 238C414 229 469 230 531 238C570 243 606 243 640 238V360H0V238Z" fill="#9BC6D1" opacity=".4"/>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" fill="none">
+  <defs>
+    <linearGradient id="skySteel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B9C5D2"/>
+      <stop offset="1" stop-color="#EAF0F5"/>
+    </linearGradient>
+    <linearGradient id="seaSteel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9EB3C0"/>
+      <stop offset="1" stop-color="#6B8090"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#skySteel)"/>
+  <rect y="236" width="640" height="124" fill="url(#seaSteel)"/>
+  <path d="M184 202H454L440 258H172L184 202Z" fill="#3A4B5F"/>
+  <rect x="284" y="154" width="74" height="48" rx="6" fill="#F3F5F8"/>
+  <rect x="310" y="118" width="10" height="88" rx="5" fill="#E8EDF2"/>
+  <rect x="212" y="130" width="12" height="92" rx="6" fill="#55677B"/>
+  <rect x="248" y="120" width="12" height="104" rx="6" fill="#55677B"/>
+  <rect x="392" y="128" width="12" height="94" rx="6" fill="#55677B"/>
+  <path d="M218 142L196 205" stroke="#748698" stroke-width="5" stroke-linecap="round"/>
+  <path d="M254 132L278 205" stroke="#748698" stroke-width="5" stroke-linecap="round"/>
+  <path d="M398 140L420 205" stroke="#748698" stroke-width="5" stroke-linecap="round"/>
+  <path d="M0 246C78 238 122 238 176 246C224 253 286 255 347 246C413 237 470 238 533 246C574 251 608 251 640 246V360H0V246Z" fill="#AFC2CE" opacity=".35"/>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" fill="none">
+  <defs>
+    <linearGradient id="skyRoro" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C6E2FF"/>
+      <stop offset="1" stop-color="#F0F7FF"/>
+    </linearGradient>
+    <linearGradient id="seaRoro" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#88B5D9"/>
+      <stop offset="1" stop-color="#5D86A6"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#skyRoro)"/>
+  <rect y="238" width="640" height="122" fill="url(#seaRoro)"/>
+  <path d="M208 128H422C438 128 452 140 454 156L466 230H190L202 150C204 138 214 128 228 128H208Z" fill="#203F7B"/>
+  <path d="M190 230H466L444 264H212L190 230Z" fill="#F4F6F8"/>
+  <rect x="258" y="152" width="116" height="32" rx="6" fill="#F8FBFF"/>
+  <rect x="280" y="98" width="10" height="84" rx="5" fill="#EFF4FA"/>
+  <rect x="336" y="98" width="10" height="84" rx="5" fill="#EFF4FA"/>
+  <circle cx="250" cy="236" r="6" fill="#1A2E55"/>
+  <circle cx="404" cy="236" r="6" fill="#1A2E55"/>
+  <path d="M0 246C71 238 118 238 174 246C237 255 286 255 349 246C415 237 467 238 531 246C574 251 609 251 640 246V360H0V246Z" fill="#9EC3E0" opacity=".4"/>
+</svg>
