@@ -164,6 +164,197 @@ function savePersistedTodayOverview() {
   } catch (error) {
     // Ignore storage failures so viewing the page never breaks.
   }
+  queueSupabaseTodayOverviewSave(state.todayOverview);
+}
+
+const supabaseAssetCandidates = [
+  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js",
+  "https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"
+];
+
+const supabaseAssetState = {
+  promise: null
+};
+
+const supabaseSyncState = {
+  client: null,
+  config: null,
+  initialized: false,
+  initialLoadPromise: null,
+  savePromise: Promise.resolve(),
+  lastSyncedSerialized: ""
+};
+
+function supabaseConfig() {
+  if (typeof window === "undefined") return null;
+  const raw = window.__SHIELDLOG_SUPABASE__ || {};
+  const url = String(raw.url || "").trim();
+  const anonKey = String(raw.anonKey || "").trim();
+  if (!url || !anonKey) return null;
+  return {
+    url,
+    anonKey,
+    table: String(raw.table || "dashboard_state").trim() || "dashboard_state",
+    pageKey: String(raw.pageKey || "main-dashboard").trim() || "main-dashboard"
+  };
+}
+
+function ensureSupabaseAssets() {
+  if (typeof window === "undefined") return Promise.resolve(null);
+  if (window.supabase?.createClient) return Promise.resolve(window.supabase);
+  if (supabaseAssetState.promise) return supabaseAssetState.promise;
+
+  supabaseAssetState.promise = new Promise((resolve, reject) => {
+    const tryLoad = (index) => {
+      if (window.supabase?.createClient) {
+        resolve(window.supabase);
+        return;
+      }
+      if (index >= supabaseAssetCandidates.length) {
+        reject(new Error("Supabase browser client failed to load"));
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = supabaseAssetCandidates[index];
+      script.async = true;
+      script.onload = () => {
+        if (window.supabase?.createClient) {
+          resolve(window.supabase);
+          return;
+        }
+        tryLoad(index + 1);
+      };
+      script.onerror = () => {
+        script.remove();
+        tryLoad(index + 1);
+      };
+      document.head.appendChild(script);
+    };
+
+    tryLoad(0);
+  }).catch((error) => {
+    supabaseAssetState.promise = null;
+    throw error;
+  });
+
+  return supabaseAssetState.promise;
+}
+
+async function ensureSupabaseClient() {
+  const config = supabaseConfig();
+  if (!config) return null;
+
+  if (
+    supabaseSyncState.client &&
+    supabaseSyncState.config &&
+    supabaseSyncState.config.url === config.url &&
+    supabaseSyncState.config.anonKey === config.anonKey &&
+    supabaseSyncState.config.table === config.table &&
+    supabaseSyncState.config.pageKey === config.pageKey
+  ) {
+    return supabaseSyncState.client;
+  }
+
+  const supabaseNamespace = await ensureSupabaseAssets();
+  if (!supabaseNamespace?.createClient) {
+    throw new Error("Supabase client is unavailable");
+  }
+
+  supabaseSyncState.config = config;
+  supabaseSyncState.client = supabaseNamespace.createClient(config.url, config.anonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    }
+  });
+
+  return supabaseSyncState.client;
+}
+
+async function fetchSupabaseTodayOverview() {
+  const client = await ensureSupabaseClient();
+  const config = supabaseSyncState.config;
+  if (!client || !config) return null;
+
+  const { data, error } = await client
+    .from(config.table)
+    .select("payload, updated_at")
+    .eq("page_key", config.pageKey)
+    .limit(1);
+
+  if (error) throw error;
+  return Array.isArray(data) && data.length ? data[0] : null;
+}
+
+async function pushSupabaseTodayOverview(snapshot) {
+  const client = await ensureSupabaseClient();
+  const config = supabaseSyncState.config;
+  if (!client || !config) return false;
+
+  const payload = normalizeTodayOverview(snapshot);
+  const serialized = JSON.stringify(payload);
+  const { error } = await client
+    .from(config.table)
+    .upsert(
+      [{
+        page_key: config.pageKey,
+        payload,
+        updated_at: new Date().toISOString()
+      }],
+      { onConflict: "page_key" }
+    );
+
+  if (error) throw error;
+  supabaseSyncState.lastSyncedSerialized = serialized;
+  return true;
+}
+
+function queueSupabaseTodayOverviewSave(snapshot, force = false) {
+  if (!supabaseConfig()) return;
+  const payload = normalizeTodayOverview(snapshot);
+  const serialized = JSON.stringify(payload);
+  if (!force && serialized === supabaseSyncState.lastSyncedSerialized) return;
+
+  supabaseSyncState.savePromise = supabaseSyncState.savePromise
+    .then(() => pushSupabaseTodayOverview(payload))
+    .catch((error) => {
+      console.warn("[ShieldLog] Supabase save failed:", error);
+    });
+}
+
+function applyRemoteTodayOverview(payload) {
+  state.todayOverview = normalizeTodayOverview(payload);
+  supabaseSyncState.lastSyncedSerialized = JSON.stringify(state.todayOverview);
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      window.localStorage.setItem(todayOverviewStorageKeyValue(), supabaseSyncState.lastSyncedSerialized);
+    } catch (error) {
+      // Ignore local cache failures when applying remote state.
+    }
+  }
+}
+
+function initializeTodayOverviewCloudSync() {
+  if (!supabaseConfig()) return Promise.resolve();
+  if (supabaseSyncState.initialLoadPromise) return supabaseSyncState.initialLoadPromise;
+
+  supabaseSyncState.initialLoadPromise = ensureSupabaseClient()
+    .then(() => fetchSupabaseTodayOverview())
+    .then((row) => {
+      if (row?.payload) {
+        applyRemoteTodayOverview(row.payload);
+        renderApp(true);
+        return;
+      }
+      queueSupabaseTodayOverviewSave(state.todayOverview, true);
+    })
+    .catch((error) => {
+      console.warn("[ShieldLog] Supabase sync init failed:", error);
+    });
+
+  return supabaseSyncState.initialLoadPromise;
 }
 
 const logisticsMain = {
@@ -6349,27 +6540,6 @@ function buildGlobalRiskView() {
   return `
     <section class="today-view marine-live-view" data-view="全球航运风险态势图">
       ${buildWorldMapSection()}
-
-      <div class="marine-live-tips">
-        <article class="today-card marine-live-tip">
-          <div class="today-card-inner">
-            <div class="today-title">${icon("route", "today-icon-svg")}<h2>${tx("页面说明", "Page Notes")}</h2></div>
-            <p>${tx("这一版保持一级页面结构，不再嵌入官网，而是使用可控的本地交互层来实现高仿船舶风险地图。", "This version keeps the map as a top-level page and no longer embeds the official site. Instead, it uses a controllable local interaction layer for a high-fidelity vessel risk map.")}</p>
-          </div>
-        </article>
-        <article class="today-card marine-live-tip">
-          <div class="today-card-inner">
-            <div class="today-title">${icon("eye", "today-icon-svg")}<h2>${tx("底图来源", "Base Map Source")}</h2></div>
-            <p>${tx("底图当前使用 map1 本地世界矢量图，并继续叠加文字标签层。船位已改成按截图右下角经纬度逐艘定点布置，点击信息卡也同步按这套坐标换算。", "The backdrop now uses the local map1 world vector map with the text label layers retained. Vessel placement is now pinned vessel-by-vessel from the screenshot coordinates, and the click popups use the same coordinate basis.")}</p>
-          </div>
-        </article>
-        <article class="today-card marine-live-tip">
-          <div class="today-card-inner">
-            <div class="today-title">${icon("data", "today-icon-svg")}<h2>${tx("后续可选", "Next Option")}</h2></div>
-            <p>${tx("如果你还想再更像截图，我下一步可以继续补港口名称、航线标注和分区域风险圈层。", "If you want it even closer to the screenshot, I can next add port labels, route annotations, and more regional risk rings.")}</p>
-          </div>
-        </article>
-      </div>
     </section>
   `;
 }
@@ -7641,6 +7811,7 @@ function boot() {
   preloadRiskFleetImages();
   document.head.insertAdjacentHTML("beforeend", `<style>${css}</style>`);
   renderApp(true);
+  initializeTodayOverviewCloudSync();
 }
 
 function renderApp(immediate = false) {
