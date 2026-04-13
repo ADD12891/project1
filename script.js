@@ -7679,7 +7679,7 @@ function app() {
     <div class="today-shell">
       <aside class="today-sidebar">
         <div class="today-logo-wrap">
-          <img class="today-logo" src="./logo.png" alt="ShieldLog logo">
+          <img class="today-logo" src="./logo.png" alt="航运风险指数 logo">
         </div>
         <nav class="today-nav">
           ${navGroup(tx("风险总览", "Risk Overview"), "grid", `${navSub(tx("今日风险指数", "Today's Risk Index"), "今日风险指数", state.activeView === "今日风险指数")}${navSub(tx("风险趋势变化", "Risk Trend"), "风险趋势变化", state.activeView === "风险趋势变化")}`, state.openGroup === "risk-overview", "risk-overview")}
