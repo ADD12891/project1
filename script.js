@@ -4026,16 +4026,21 @@ body.theme-dark .marine-live-tip p {
   position: relative;
   border-radius: 24px;
   overflow: hidden;
-  background: linear-gradient(180deg, #f6fbff 0%, #edf4fb 100%);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 32%),
+    linear-gradient(180deg, #f6fbff 0%, #eaf2fb 100%);
   min-height: 340px;
   box-shadow: inset 0 0 0 1px rgba(222, 232, 243, 0.9);
 }
 
 .vessel-detail-photo-frame img {
+  display: block;
   width: 100%;
   height: min(45vw, 460px);
   min-height: 340px;
-  object-fit: cover;
+  padding: 18px 22px 20px;
+  object-fit: contain;
+  object-position: center center;
 }
 
 .vessel-detail-photo-meta {
@@ -7509,7 +7514,7 @@ function app() {
         <nav class="today-nav">
           ${navGroup(tx("风险总览", "Risk Overview"), "grid", `${navSub(tx("今日风险指数", "Today's Risk Index"), "今日风险指数", state.activeView === "今日风险指数")}${navSub(tx("风险趋势变化", "Risk Trend"), "风险趋势变化", state.activeView === "风险趋势变化")}`, state.openGroup === "risk-overview", "risk-overview")}
           ${navGroup(tx("风险构成分析", "Risk Composition"), "analysis", `${navSub(tx("政策风险监控", "Policy Risk Monitoring"), "政策风险监控", state.activeView === "政策风险监控")}${navSub(tx("供应链履约情况", "Supply Chain Fulfillment"), "供应链履约情况", state.activeView === "供应链履约情况")}${navSub(tx("物流与航道通行", "Logistics & Route Transit"), "物流与航道通行", state.activeView === "物流与航道通行")}${navSub(tx("市场需求波动", "Market Demand Fluctuation"), "市场需求波动", state.activeView === "市场需求波动")}${navSub(tx("舆情与情绪热度", "Sentiment & Heat"), "舆情与情绪热度", state.activeView === "舆情与情绪热度")}`, state.openGroup === "risk-analysis", "risk-analysis")}
-          ${navItem(tx("全球航运风险态势图", "Global Vessel Risk Map"), "全球航运风险态势图", "route")}
+          ${navItemAsset(tx("全球航运风险态势图", "Global Vessel Risk Map"), "全球航运风险态势图", "./assets/nav-icons/地球.svg", "全球航运风险态势图图标")}
           ${navItemAsset(tx("行业事件雷达", "Industry Event Radar"), "行业事件雷达", "./assets/nav-icons/雷达.svg", "行业事件雷达图标")}
           ${navItem(tx("决策建议与处置方案", "Decision Guidance"), "决策建议与处置方案", "plan")}
           ${navItemAsset(tx("数据来源与调用", "Data Sources & Calls"), "数据来源与调用", "./assets/nav-icons/目标关系图.svg", "数据来源与调用图标")}
