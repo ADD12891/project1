@@ -1676,6 +1676,19 @@ function preloadRiskFleetImages() {
   });
 }
 
+function preloadRiskMapBackdrop() {
+  if (window.__riskMapBackdropPreloaded) return;
+  window.__riskMapBackdropPreloaded = true;
+
+  const image = new Image();
+  image.decoding = "async";
+  image.fetchPriority = "high";
+  image.src = riskMapBackdropUrl;
+  if (typeof image.decode === "function") {
+    image.decode().catch(() => {});
+  }
+}
+
 const routeHotspots = [
   { id: "north-sea", x: 50.2, y: 27.8, size: 10.8, tone: "medium", labelZh: "北海窗口", labelEn: "North Sea Window" },
   { id: "suez", x: 54.8, y: 45.6, size: 13.2, tone: "high", labelZh: "苏伊士航段", labelEn: "Suez Segment" },
@@ -1695,7 +1708,8 @@ const routeTrafficClusters = [
   { id: "malacca", x: 77.6, y: 57.6, count: 22, spreadX: 8.8, spreadY: 5.1, heading: 36, risks: ["low", "medium", "high", "low"] },
   { id: "pacific", x: 85.6, y: 42.8, count: 14, spreadX: 5.8, spreadY: 9.4, heading: 118, risks: ["medium", "low", "high"] }
 ];
-const riskMapBackdropUrl = "./assets/world-map-from-map1.svg";
+const riskMapBackdropUrl = "./assets/world-map-from-map1-optimized.svg";
+const instantSwitchViews = new Set(["全球航运风险态势图"]);
 const vesselVoyageBackdropUrl = "./assets/map1-preview.png";
 const worldMapAspectRatio = 2;
 const vesselDetailRoutePrefix = "船舶详情:";
@@ -2160,6 +2174,7 @@ body.lang-en .today-sub-item {
 .today-page {
   display: grid;
   gap: 22px;
+  position: relative;
 }
 
 .today-view {
@@ -2169,6 +2184,29 @@ body.lang-en .today-sub-item {
 .today-view.is-visible {
   display: grid;
   gap: 22px;
+}
+
+.today-view.keep-mounted-view {
+  display: grid;
+  gap: 22px;
+}
+
+.today-view.keep-mounted-view:not(.is-visible) {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.today-view.keep-mounted-view.is-visible {
+  position: relative;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  z-index: 1;
 }
 
 .today-placeholder-card {
@@ -3277,6 +3315,7 @@ body.theme-dark .route-media-item {
   background: #ffffff;
   border: 1px solid #dfe8f2;
   box-shadow: 0 18px 34px rgba(30, 52, 78, 0.08);
+  contain: layout paint;
 }
 
 .route-map-viewport {
@@ -3288,10 +3327,18 @@ body.theme-dark .route-media-item {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  contain: layout paint;
 }
 
 .route-map-viewport.is-dragging {
   cursor: grabbing;
+}
+
+.route-map-viewport.is-loading .route-map-stage,
+.route-map-viewport.is-loading .route-map-popup,
+.route-map-viewport.is-loading .route-map-focus-bubble,
+.route-map-viewport.is-loading .route-map-coords {
+  visibility: hidden;
 }
 
 .route-map-stage {
@@ -3299,6 +3346,43 @@ body.theme-dark .route-media-item {
   inset: 0;
   transform-origin: 0 0;
   will-change: transform;
+}
+
+.route-map-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #3a4a5a;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  z-index: 4;
+}
+
+.route-map-viewport.is-loading .route-map-loading {
+  opacity: 1;
+}
+
+.route-map-loading-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2.6px solid rgba(47, 134, 223, 0.18);
+  border-top-color: #2f86df;
+  animation: routeMapSpin 0.78s linear infinite;
+}
+
+@keyframes routeMapSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .route-map-surface {
@@ -3336,7 +3420,8 @@ body.theme-dark .route-media-item {
   object-position: center center;
   opacity: 1;
   filter: none;
-  transform: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
@@ -5620,7 +5705,7 @@ function radarLiveWeatherItem(vessel, titleZh, titleEn, impactZh, impactEn, href
     titleZh,
     titleEn,
     source: { zh: "Windy", en: "Windy" },
-    time: { zh: "实时", en: "Live" },
+    time: { zh: "2026-04 实时", en: "Live · 2026-04" },
     impactZh,
     impactEn,
     href
@@ -5632,22 +5717,22 @@ function radarRegionRealFeeds(vessel, region) {
     "Eastern Mediterranean": {
       shipping: [
         {
-          titleZh: "DP World 启动塔尔图斯港 8 亿美元改造计划",
-          titleEn: "DP World launches $800 million redevelopment of Tartus Port",
+          titleZh: "苏伊士运河取消大型集装箱船 15% 通行费回扣",
+          titleEn: "Suez Canal cancels rebate for large boxships",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2025-11-13", en: "2025-11-13" },
-          impactZh: "东地中海港口基础设施升级将影响区域中转与挂靠节奏。",
-          impactEn: "Eastern Mediterranean port upgrades may reshape regional transshipment and call patterns.",
-          href: "https://www.porttechnology.org/news/dp-world-launches-800-million-redevelopment-of-tartus-port/"
+          time: { zh: "2026-04-09", en: "2026-04-09" },
+          impactZh: "苏伊士政策变动会直接影响东地中海方向的挂靠决策与绕航成本判断。",
+          impactEn: "The Suez policy change directly affects Eastern Mediterranean call decisions and diversion economics.",
+          href: "https://www.porttechnology.org/suez-canal-cancels-rebate-for-large-boxships/"
         },
         {
-          titleZh: "DP World 土耳其码头迎来万海远东至东地中海新航线",
-          titleEn: "DP World welcomes new Wan Hai Lines service in Türkiye",
+          titleZh: "马士基-赫伯罗特 ME11 服务恢复完整苏伊士环线",
+          titleEn: "Maersk-Hapag ME11 service resumes full Suez loop",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2025-10-30", en: "2025-10-30" },
-          impactZh: "该服务强化了远东至东地中海的周班连接能力。",
-          impactEn: "The new service strengthens weekly Far East–Eastern Mediterranean connectivity.",
-          href: "https://www.porttechnology.org/news/dp-world-welcomes-new-wan-hai-lines-service-in-turkiye/"
+          time: { zh: "2026-02-05", en: "2026-02-05" },
+          impactZh: "印度-中东-地中海箱流正在重新回到苏伊士路径，区域节奏会被重新校准。",
+          impactEn: "India–Middle East–Mediterranean container flows are moving back through Suez, recalibrating the regional rhythm.",
+          href: "https://www.porttechnology.org/news/maersk-hapag-me11-service-resumes-full-suez-loop/"
         }
       ],
       weather: [
@@ -5663,22 +5748,22 @@ function radarRegionRealFeeds(vessel, region) {
     "Arabian Sea lane": {
       shipping: [
         {
-          titleZh: "MSC 停止所有发往阿拉伯湾的在途货载",
-          titleEn: "MSC terminates all Arabian Gulf shipments",
-          source: { zh: "Seatrade Maritime", en: "Seatrade Maritime" },
-          time: { zh: "2026-03-04", en: "2026-03-04" },
-          impactZh: "中东局势正在直接影响阿拉伯海与海湾港口的箱流组织。",
-          impactEn: "Middle East tensions are directly affecting cargo flows across the Arabian Sea and Gulf ports.",
-          href: "https://www.seatrade-maritime.com/containers/msc-terminates-all-arabian-gulf-shipments"
+          titleZh: "OOCL 开通东南亚-印度-巴基斯坦 SIS 新航线",
+          titleEn: "OOCL launches Southeast Asia–India–Pakistan service",
+          source: { zh: "Port Technology International", en: "Port Technology International" },
+          time: { zh: "2026-04-01", en: "2026-04-01" },
+          impactZh: "阿拉伯海与印度次大陆西岸的区域航线正在加密，南亚支线联动增强。",
+          impactEn: "Regional services across the Arabian Sea and India’s west coast are intensifying, strengthening South Asia feeder links.",
+          href: "https://www.porttechnology.org/oocl-launches-southeast-asia-india-pakistan-service/"
         },
         {
-          titleZh: "IMO 警告霍尔木兹风险升级并审议对船员的影响",
-          titleEn: "IMO warns “time is short” as Hormuz risks escalate",
+          titleZh: "DP World 提升红海-海湾-印度航线运力",
+          titleEn: "DP World boosts capacity on Red Sea–Gulf–India",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2026-03-18", en: "2026-03-18" },
-          impactZh: "阿拉伯海、阿曼湾与海湾方向的安全风险仍在抬升。",
-          impactEn: "Security risks remain elevated across the Arabian Sea, Sea of Oman, and Gulf region.",
-          href: "https://www.porttechnology.org/imo-warns-time-is-short-as-hormuz-risks-escalate/"
+          time: { zh: "2026-02-26", en: "2026-02-26" },
+          impactZh: "印度-海湾-红海箱运走廊正在扩容，以对冲区域波动带来的班期压力。",
+          impactEn: "The India–Gulf–Red Sea corridor is adding capacity to offset schedule pressure from regional volatility.",
+          href: "https://www.porttechnology.org/dp-world-boosts-capacity-on-red-sea-gulf-india/"
         }
       ],
       weather: [
@@ -5686,7 +5771,7 @@ function radarRegionRealFeeds(vessel, region) {
           titleZh: "印度气象局阿拉伯海海区通报",
           titleEn: "IMD Arabian Sea bulletin archive",
           source: { zh: "India Meteorological Department", en: "India Meteorological Department" },
-          time: { zh: "官方海区通报", en: "Official sea-area bulletin" },
+          time: { zh: "2026-04 官方海区通报", en: "Official sea-area bulletin · 2026-04" },
           impactZh: "适合查看阿拉伯海海区的风、浪、能见度与海况通报。",
           impactEn: "Useful for Arabian Sea wind, wave, visibility, and sea-state bulletins.",
           href: "https://rsmcnewdelhi.imd.gov.in/archive-information.php?internal_menu=NTk%3D&menu_id=OA%3D%3D"
@@ -5696,22 +5781,22 @@ function radarRegionRealFeeds(vessel, region) {
     "Mozambique Channel": {
       shipping: [
         {
-          titleZh: "MSC 推出亚洲至莫桑比克 Cheetah 航线",
-          titleEn: "MSC unveils dedicated Asia-Mozambique Cheetah shipping line",
+          titleZh: "达飞重组印度-东非航线网络",
+          titleEn: "CMA CGM reorganises India-East Africa services",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2025-10-21", en: "2025-10-21" },
-          impactZh: "这条直连航线提升了莫桑比克方向的挂靠与中转效率。",
-          impactEn: "The direct service improves calling and transshipment efficiency into Mozambique.",
-          href: "https://www.porttechnology.org/news/msc-unveils-dedicated-asia-mozambique-cheetah-shipping-line/"
+          time: { zh: "2026-02-25", en: "2026-02-25" },
+          impactZh: "印度洋至东非与莫桑比克方向的支线与中转编排正在重组。",
+          impactEn: "Feeder and transshipment patterns toward East Africa and Mozambique are being reorganised.",
+          href: "https://www.porttechnology.org/cma-cgm-reorganises-india-east-africa-services/"
         },
         {
-          titleZh: "蒙巴萨港 2025 年吞吐量升至 211 万 TEU",
-          titleEn: "Port of Mombasa hits 2.1 million TEUs in 2025",
+          titleZh: "汉班托塔国际港扩建堆场应对全球航运量激增",
+          titleEn: "HIP expands yards to handle surging volumes",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2026-02-04", en: "2026-02-04" },
-          impactZh: "东非港口吞吐上升会影响莫桑比克海峡周边支线和补给走廊。",
-          impactEn: "Rising East Africa throughput can influence feeder schedules and bunker corridors around the channel.",
-          href: "https://www.porttechnology.org/news/port-of-mombasa-hits-2-1-million-teus-in-2025/"
+          time: { zh: "2026-04-07", en: "2026-04-07" },
+          impactZh: "南向绕航与印度洋替代流量增加，东非补给走廊的泊位压力上升。",
+          impactEn: "Southbound diversions and Indian Ocean alternative traffic are raising berth pressure on East Africa supply corridors.",
+          href: "https://www.porttechnology.org/hip-expands-yards-to-handle-surge-in-global-shipping-volumes/"
         }
       ],
       weather: [
@@ -5727,22 +5812,22 @@ function radarRegionRealFeeds(vessel, region) {
     "Southeast Asia to West Pacific": {
       shipping: [
         {
-          titleZh: "ONE 调整 TID1 航线并新增新加坡与胡志明港挂靠",
-          titleEn: "ONE revamps TID1 service to add Singapore, Ho Chi Minh",
+          titleZh: "OOCL 开通东南亚-印度-巴基斯坦 SIS 新航线",
+          titleEn: "OOCL launches Southeast Asia–India–Pakistan service",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2026-03-26", en: "2026-03-26" },
-          impactZh: "东南亚区域内支线与转运联动正在增强。",
-          impactEn: "Intra-Southeast Asia feeder and transshipment connectivity is strengthening.",
-          href: "https://www.porttechnology.org/one-revamps-tid1-service-adds-singapore-and-ho-chi-minh/"
+          time: { zh: "2026-04-01", en: "2026-04-01" },
+          impactZh: "东南亚枢纽与南亚市场的新连接正在增强区域内转运联动。",
+          impactEn: "New links between Southeast Asian hubs and South Asian markets are strengthening intra-regional transshipment.",
+          href: "https://www.porttechnology.org/oocl-launches-southeast-asia-india-pakistan-service/"
         },
         {
-          titleZh: "OCEAN Alliance 将更多高频运力投向东南亚航线",
-          titleEn: "OCEAN Alliance targets high-frequency corridors to SE Asia",
+          titleZh: "马士基将 Northern Star 服务切换至洋山深水港",
+          titleEn: "Maersk shifts Northern Star to Yangshan terminal",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2026-02-23", en: "2026-02-23" },
-          impactZh: "该调整会影响东南亚周边的舱位密度与港口连接结构。",
-          impactEn: "The shift affects capacity density and port connectivity across Southeast Asia.",
-          href: "https://www.porttechnology.org/ocean-alliance-targets-high-frequency-corridors-to-se-asia/"
+          time: { zh: "2026-04-10", en: "2026-04-10" },
+          impactZh: "上海-西太平洋节点切换会影响东北亚至南太平洋链路的枢纽配置。",
+          impactEn: "The Shanghai–West Pacific node shift affects hub configuration across Northeast Asia to the South Pacific.",
+          href: "https://www.porttechnology.org/maersk-shifts-northern-star-to-yangshan-terminal/"
         }
       ],
       weather: [
@@ -5758,22 +5843,22 @@ function radarRegionRealFeeds(vessel, region) {
     "Northwest Pacific": {
       shipping: [
         {
-          titleZh: "Swire Shipping 升级 North Asia Express 周班航线",
-          titleEn: "Swire Shipping launches weekly North Asia express route",
+          titleZh: "马士基将 Northern Star 服务切换至洋山深水港",
+          titleEn: "Maersk shifts Northern Star to Yangshan terminal",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2025-08-18", en: "2025-08-18" },
-          impactZh: "东北亚与太平洋区域连接性提升会带来新的转运节奏。",
-          impactEn: "Improved Northeast Asia-Pacific connectivity may reshape regional transshipment cadence.",
-          href: "https://www.porttechnology.org/news/swire-shipping-launches-weekly-north-asia-express-route/"
+          time: { zh: "2026-04-10", en: "2026-04-10" },
+          impactZh: "洋山挂靠恢复会调整东北亚干线与西太平洋转运节奏。",
+          impactEn: "The restored Yangshan call will adjust Northeast Asia trunk-line and West Pacific transshipment cadence.",
+          href: "https://www.porttechnology.org/maersk-shifts-northern-star-to-yangshan-terminal/"
         },
         {
-          titleZh: "西北海港联盟 2026 年 1 月箱量下降 13.9%",
-          titleEn: "NWSA container volumes down 13.9 per cent in January 2026",
+          titleZh: "ONE 调整 PN1 航线并取消厦门港挂靠",
+          titleEn: "ONE revises PN1 network ending Xiamen Port call",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2026-02-20", en: "2026-02-20" },
-          impactZh: "跨太平洋运力与港口重置正在影响西北太平洋方向节奏。",
-          impactEn: "Carrier resets across the Transpacific are affecting the Northwest Pacific rhythm.",
-          href: "https://www.porttechnology.org/nwsa-volumes-fall-as-carriers-reset-transpacific/"
+          time: { zh: "2026-03-05", en: "2026-03-05" },
+          impactZh: "PN1 网络调整会影响西北太平洋至北美方向的接驳与转港安排。",
+          impactEn: "The PN1 network adjustment affects Northwest Pacific connections and relay plans toward North America.",
+          href: "https://www.porttechnology.org/one-revises-pn1-network-ending-xiamen-port-call/"
         }
       ],
       weather: [
@@ -5781,7 +5866,7 @@ function radarRegionRealFeeds(vessel, region) {
           titleZh: "NOAA 太平洋海洋天气图与风浪预报",
           titleEn: "Ocean Prediction Center - Pacific Marine",
           source: { zh: "NOAA Ocean Prediction Center", en: "NOAA Ocean Prediction Center" },
-          time: { zh: "官方图形预报", en: "Official graphical forecast" },
+          time: { zh: "2026-04 官方图形预报", en: "Official graphical forecast · 2026-04" },
           impactZh: "适合查看西北太平洋的大尺度海面分析和风浪预报。",
           impactEn: "Useful for large-scale Pacific surface analysis and wind-wave forecasts.",
           href: "https://ocean.weather.gov/Pac_tab.php"
@@ -5791,13 +5876,13 @@ function radarRegionRealFeeds(vessel, region) {
     "Central North Atlantic": {
       shipping: [
         {
-          titleZh: "PhilaPort 2025 年创下集装箱吞吐量新高",
-          titleEn: "PhilaPort posts record container volumes in 2025",
+          titleZh: "马士基将 PANZ 服务切换至 Fenix Marine Terminal",
+          titleEn: "Maersk shifts PANZ service to Fenix Marine Terminal",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2026-01-15", en: "2026-01-15" },
-          impactZh: "北大西洋港口增长会反馈到欧美干线和中转节点节奏。",
-          impactEn: "North Atlantic port growth feeds back into Europe-Americas trunk lane timing.",
-          href: "https://www.porttechnology.org/news/philaport-posts-record-container-volumes-in-2025/"
+          time: { zh: "2026-03-24", en: "2026-03-24" },
+          impactZh: "欧美-大洋洲联动的港口切换正在影响跨洋节点的排班与衔接。",
+          impactEn: "Port shifts across Europe-Americas-Oceania-linked services are influencing inter-ocean scheduling and connections.",
+          href: "https://www.porttechnology.org/maersk-shifts-panz-service-to-fenix-marine-terminal/"
         },
         {
           titleZh: "达飞调整欧洲至美国跨大西洋服务网络",
@@ -5814,7 +5899,7 @@ function radarRegionRealFeeds(vessel, region) {
           titleZh: "NOAA 大西洋海洋天气图与风浪预报",
           titleEn: "Ocean Prediction Center - Atlantic Marine",
           source: { zh: "NOAA Ocean Prediction Center", en: "NOAA Ocean Prediction Center" },
-          time: { zh: "官方图形预报", en: "Official graphical forecast" },
+          time: { zh: "2026-04 官方图形预报", en: "Official graphical forecast · 2026-04" },
           impactZh: "适合查看北大西洋海面分析、风浪场与高海况预报。",
           impactEn: "Useful for North Atlantic surface analysis, wind-wave fields, and high-seas forecasts.",
           href: "https://ocean.weather.gov/Atl_tab.php"
@@ -5824,13 +5909,13 @@ function radarRegionRealFeeds(vessel, region) {
     "South Atlantic passage": {
       shipping: [
         {
-          titleZh: "DP World 与赫伯罗特续签桑托斯港长期操作合同",
-          titleEn: "DP World, Hapag-Lloyd renew operations contract at Santos",
+          titleZh: "达飞调整欧洲至美国跨大西洋服务网络",
+          titleEn: "CMA CGM revamps Transatlantic services from Europe to US",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2025-10-02", en: "2025-10-02" },
-          impactZh: "巴西港口长期操作安排会影响南大西洋东岸挂靠稳定性。",
-          impactEn: "Long-term terminal arrangements in Brazil can affect call stability on the South Atlantic side.",
-          href: "https://www.porttechnology.org/news/dp-world-hapag-lloyd-renew-operations-contract-at-santos/"
+          time: { zh: "2026-02-13", en: "2026-02-13" },
+          impactZh: "跨大西洋网络重排会影响南北大西洋衔接与南美东岸链路安排。",
+          impactEn: "Transatlantic network realignment affects North-South Atlantic connections and East South America planning.",
+          href: "https://www.porttechnology.org/news/cma-cgm-revamps-transatlantic-services-from-europe-to-us/"
         },
         {
           titleZh: "瓦伦西亚港与桑托斯港签署绿色航运走廊合作备忘录",
@@ -5847,7 +5932,7 @@ function radarRegionRealFeeds(vessel, region) {
           titleZh: "NOAA 大西洋海洋天气图与风浪预报",
           titleEn: "Ocean Prediction Center - Atlantic Marine",
           source: { zh: "NOAA Ocean Prediction Center", en: "NOAA Ocean Prediction Center" },
-          time: { zh: "官方图形预报", en: "Official graphical forecast" },
+          time: { zh: "2026-04 官方图形预报", en: "Official graphical forecast · 2026-04" },
           impactZh: "适合查看南北大西洋主航路上的海面分析与风浪预报。",
           impactEn: "Useful for Atlantic surface analysis and wave forecasts along the main route.",
           href: "https://ocean.weather.gov/Atl_tab.php"
@@ -5866,13 +5951,13 @@ function radarRegionRealFeeds(vessel, region) {
           href: "https://www.porttechnology.org/hip-expands-yards-to-handle-surge-in-global-shipping-volumes/"
         },
         {
-          titleZh: "ONE 开通科伦坡至马累支线服务",
-          titleEn: "ONE launches Colombo–Malé feeder service",
+          titleZh: "OOCL 开通东南亚-印度-巴基斯坦 SIS 新航线",
+          titleEn: "OOCL launches Southeast Asia–India–Pakistan service",
           source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2025-10-27", en: "2025-10-27" },
-          impactZh: "中印度洋补给与转运节点的支线连接正在增强。",
-          impactEn: "Feeder connectivity is strengthening around central Indian Ocean relay and supply nodes.",
-          href: "https://www.porttechnology.org/news/one-launches-colombo-male-feeder-service/"
+          time: { zh: "2026-04-01", en: "2026-04-01" },
+          impactZh: "印度洋北缘的新服务会影响中印度洋补给与转运节点的节奏。",
+          impactEn: "New services on the northern rim of the Indian Ocean affect relay and supply-node timing in the central basin.",
+          href: "https://www.porttechnology.org/oocl-launches-southeast-asia-india-pakistan-service/"
         }
       ],
       weather: [
@@ -5888,22 +5973,22 @@ function radarRegionRealFeeds(vessel, region) {
     "open-ocean trunk route": {
       shipping: [
         {
-          titleZh: "HMM 更新 2026 年东西向航线网络",
-          titleEn: "HMM updates East-West service network for 2026",
-          source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2025-12-17", en: "2025-12-17" },
-          impactZh: "东西向主干航线调整会直接影响远洋船队的绕航与挂靠配置。",
-          impactEn: "East-West network revisions directly influence long-haul diversions and rotations.",
-          href: "https://www.porttechnology.org/news/hmm-updates-east-west-service-network-for-2026/"
+          titleZh: "联合国安理会发布 2026 年 4 月海上安全月度展望",
+          titleEn: "Maritime Security, April 2026 Monthly Forecast",
+          source: { zh: "Security Council Report", en: "Security Council Report" },
+          time: { zh: "2026-04-01", en: "2026-04-01" },
+          impactZh: "霍尔木兹与曼德海峡风险评估会直接影响远洋主干线的绕航判断与保费预期。",
+          impactEn: "Risk assessments for Hormuz and Bab al-Mandab directly affect long-haul diversion decisions and insurance expectations.",
+          href: "https://www.securitycouncilreport.org/monthly-forecast/2026-04/maritime-security-4.php"
         },
         {
-          titleZh: "ONE 更新 2026 年东西向网络方案",
-          titleEn: "ONE updates East–West network for 2026 launch",
-          source: { zh: "Port Technology International", en: "Port Technology International" },
-          time: { zh: "2025-12-15", en: "2025-12-15" },
-          impactZh: "全球主干网络更新会反馈到开放海域上的运力分配与港序设计。",
-          impactEn: "Global trunk-network updates feed back into capacity allocation and rotation design at sea.",
-          href: "https://www.porttechnology.org/one-updates-east-west-network-for-2026-launch/"
+          titleZh: "4 月全球供应链与物流更新指出中东冲突仍在扰动海运网络",
+          titleEn: "Supply Chain & Logistics Update – April 2026",
+          source: { zh: "Al Sharqi", en: "Al Sharqi" },
+          time: { zh: "2026-04-06", en: "2026-04-06" },
+          impactZh: "全球主干航线仍受中东冲突、绕航和港口拥堵影响，远洋船队需要继续保留弹性。",
+          impactEn: "Global trunk lanes remain affected by Middle East disruption, diversions, and congestion, requiring continued fleet flexibility.",
+          href: "https://www.alsharqi.co/market-update/logistics-supply-chain-update-april-2026/"
         }
       ],
       weather: [
@@ -6318,11 +6403,13 @@ function openVesselDetail(vesselId, returnView = state.activeView) {
   if (!vessel) return;
   state.selectedVesselId = vessel.id;
   state.detailReturnView = isVesselDetailRoute(returnView) ? "全球航运风险态势图" : returnView;
-  setNavActive(vesselDetailRoute(vessel.id));
+  state.activeView = vesselDetailRoute(vessel.id);
+  renderApp(true);
 }
 
 function returnFromVesselDetail() {
-  setNavActive(state.detailReturnView || "全球航运风险态势图");
+  state.activeView = state.detailReturnView || "全球航运风险态势图";
+  renderApp(true);
 }
 
 function destroyVesselSatelliteMaps() {
@@ -6500,10 +6587,8 @@ function buildWorldMapSection() {
             <div class="route-map-stage" data-risk-map-stage>
               <div class="route-map-surface" data-risk-map-surface>
                 <div class="route-map-backdrop">
-                  <img src="${riskMapBackdropUrl}" alt="World country boundary map from the local map1 vector dataset" draggable="false" loading="eager" fetchpriority="high" decoding="async">
+                  <img src="${riskMapBackdropUrl}" alt="World country boundary map from the local map1 vector dataset" draggable="false" loading="eager" fetchpriority="high" decoding="async" data-risk-map-image>
                 </div>
-                ${buildMapLabelLayer(mapRegionLabels, "regions")}
-                ${buildMapLabelLayer(mapMajorCountryLabels, "major")}
                 <div class="route-map-vessel-layer">
                   ${riskFleet.map((vessel) => `
                     <button
@@ -6518,6 +6603,10 @@ function buildWorldMapSection() {
                   `).join("")}
                 </div>
               </div>
+            </div>
+            <div class="route-map-loading" data-risk-map-loading>
+              <span class="route-map-loading-spinner" aria-hidden="true"></span>
+              <span>Loading...</span>
             </div>
             <div class="route-map-popup" data-risk-map-popup hidden></div>
             <div class="route-map-focus-bubble" data-risk-map-focus hidden></div>
@@ -6538,7 +6627,7 @@ function buildWorldMapSection() {
 
 function buildGlobalRiskView() {
   return `
-    <section class="today-view marine-live-view" data-view="全球航运风险态势图">
+    <section class="today-view keep-mounted-view marine-live-view" data-view="全球航运风险态势图">
       ${buildWorldMapSection()}
     </section>
   `;
@@ -6661,6 +6750,11 @@ function buildVesselDetailView(vessel) {
       </div>
     </section>
   `;
+}
+
+function buildActiveVesselDetailView() {
+  const vessel = vesselFromDetailRoute(state.activeView);
+  return vessel ? buildVesselDetailView(vessel) : "";
 }
 
 function formatMapCoordinate(value, positiveSuffix, negativeSuffix) {
@@ -7079,6 +7173,56 @@ function setRiskMapCoordinates(coordinates) {
   lngNode.classList.remove("muted");
 }
 
+function riskMapImageLoaded() {
+  const image = document.querySelector("[data-risk-map-image]");
+  return Boolean(image && image.complete && image.naturalWidth > 0);
+}
+
+function scheduleRiskMapReveal() {
+  const viewport = document.querySelector("[data-risk-map-viewport]");
+  if (!viewport) return;
+  const token = String(Date.now() + Math.random());
+  viewport.dataset.loadingToken = token;
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      const activeViewport = document.querySelector("[data-risk-map-viewport]");
+      if (!activeViewport || activeViewport.dataset.loadingToken !== token) return;
+      if (state.activeView !== "全球航运风险态势图") return;
+      activeViewport.classList.remove("is-loading");
+    });
+  });
+}
+
+function bindRiskMapLoading() {
+  const viewport = document.querySelector("[data-risk-map-viewport]");
+  const image = document.querySelector("[data-risk-map-image]");
+  if (!viewport || !image) return;
+
+  viewport.classList.add("is-loading");
+
+  if (riskMapImageLoaded()) {
+    if (state.activeView === "全球航运风险态势图") {
+      scheduleRiskMapReveal();
+    }
+    return;
+  }
+
+  if (image.dataset.loadingBound === "true") return;
+  image.dataset.loadingBound = "true";
+
+  const finishLoading = () => {
+    const activeViewport = document.querySelector("[data-risk-map-viewport]");
+    if (!activeViewport) return;
+    if (state.activeView === "全球航运风险态势图") {
+      scheduleRiskMapReveal();
+    }
+  };
+
+  image.addEventListener("load", finishLoading);
+  image.addEventListener("error", finishLoading);
+}
+
 function riskMapCoordinatesFromPointer(viewport, clientX, clientY) {
   const rects = riskMapSurfaceRects();
   if (!rects || rects.viewport !== viewport) {
@@ -7139,6 +7283,7 @@ function bindRiskMap() {
   if (!viewport || viewport.dataset.bound === "true") return;
 
   viewport.dataset.bound = "true";
+  bindRiskMapLoading();
 
   viewport.addEventListener("dragstart", (event) => {
     event.preventDefault();
@@ -7792,7 +7937,7 @@ function app() {
           ${placeholderView("供应链履约情况", tx("供应链履约情况", "Supply Chain Fulfillment"), tx("这个页面的导航切换已经接通，后续我们可以继续按参考图精修这张页面。", "Navigation switching is already connected for this page, and we can continue refining it against the reference image later."))}
           ${buildLogisticsView()}
           ${buildGlobalRiskView()}
-          ${riskFleet.map((vessel) => buildVesselDetailView(vessel)).join("")}
+          ${buildActiveVesselDetailView()}
           ${placeholderView("市场需求波动", tx("市场需求波动", "Market Demand Fluctuation"), tx("这个页面的导航切换已经接通，后续我们可以继续按参考图精修这张页面。", "Navigation switching is already connected for this page, and we can continue refining it against the reference image later."))}
           ${placeholderView("舆情与情绪热度", tx("舆情与情绪热度", "Sentiment & Heat"), tx("这个页面的导航切换已经接通，后续我们可以继续按参考图精修这张页面。", "Navigation switching is already connected for this page, and we can continue refining it against the reference image later."))}
           ${buildIndustryRadarView()}
@@ -7809,6 +7954,7 @@ function app() {
 
 function boot() {
   preloadRiskFleetImages();
+  preloadRiskMapBackdrop();
   document.head.insertAdjacentHTML("beforeend", `<style>${css}</style>`);
   renderApp(true);
   initializeTodayOverviewCloudSync();
@@ -7862,6 +8008,7 @@ function revealPageBlocks(view) {
 }
 
 function setNavActive(target, immediate = false) {
+  const previousView = state.activeView;
   if (target === "行业事件雷达") {
     ensureRadarVessel();
   }
@@ -7907,12 +8054,24 @@ function setNavActive(target, immediate = false) {
   }
 
   if (!immediate) {
-    revealPageBlocks(activeViewNode);
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    const prefersInstantSwitch = instantSwitchViews.has(target) || instantSwitchViews.has(previousView);
+    if (!prefersInstantSwitch) {
+      revealPageBlocks(activeViewNode);
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    } else {
+      window.scrollTo(0, 0);
+    }
   }
 
   if (target === "物流与航道通行" || target === "全球航运风险态势图") {
     window.requestAnimationFrame(() => {
+      if (target === "全球航运风险态势图") {
+        const viewport = document.querySelector("[data-risk-map-viewport]");
+        if (viewport) {
+          viewport.classList.add("is-loading");
+        }
+        bindRiskMapLoading();
+      }
       updateRiskMapTransform();
       setRiskMapCoordinates(null);
       syncRiskMapSelection();
@@ -7998,6 +8157,7 @@ function bindEvents() {
   });
 
   bindRiskMap();
+  bindRiskMapLoading();
   bindVesselSatelliteCards();
   bindIndustryRadarEvents();
   bindTodayOverviewEditors();
